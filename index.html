@@ -5,40 +5,466 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Racing</title>
 	<style>
-		body { margin: 0; overflow: hidden; background: #000; }
+		body { margin: 0; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 		canvas { display: block; }
-		#editor-link {
+
+		.hidden { display: none !important; }
+
+		/* ── Overlay base ────────────────────────────────────── */
+		.overlay {
 			position: absolute;
-			bottom: 12px;
-			right: 16px;
+			inset: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: rgba(0,0,0,0.68);
+			backdrop-filter: blur(6px);
+			-webkit-backdrop-filter: blur(6px);
+			z-index: 20;
+			gap: 16px;
+		}
+
+		.overlay h1 {
+			margin: 0;
 			color: #fff;
-			font: 14px sans-serif;
+			font: 700 44px/1 sans-serif;
+			letter-spacing: 8px;
+			text-transform: uppercase;
+		}
+
+		.overlay h2 {
+			margin: 0;
+			color: #fff;
+			font: 700 22px/1 sans-serif;
+			letter-spacing: 4px;
+			text-transform: uppercase;
+		}
+
+		.overlay p {
+			margin: 0;
+			color: rgba(255,255,255,0.5);
+			font: 600 12px sans-serif;
+			letter-spacing: 3px;
+			text-transform: uppercase;
+		}
+
+		/* ── Shared button styles ────────────────────────────── */
+		.btn-primary {
+			padding: 13px 40px;
+			border: none;
+			border-radius: 12px;
+			background: rgba(255,255,255,0.12);
+			color: #fff;
+			font: 700 14px sans-serif;
+			letter-spacing: 2px;
+			cursor: pointer;
+			transition: background 0.12s;
+		}
+		.btn-primary:hover { background: rgba(255,255,255,0.22); }
+
+		.btn-green {
+			background: rgba(80,210,80,0.25);
+			color: rgba(160,255,160,0.95);
+		}
+		.btn-green:hover {
+			background: rgba(80,210,80,0.45);
+			color: #fff;
+		}
+
+		.btn-blue {
+			background: rgba(80,140,255,0.25);
+			color: rgba(160,200,255,0.95);
+		}
+		.btn-blue:hover {
+			background: rgba(80,140,255,0.45);
+			color: #fff;
+		}
+
+		.btn-back {
+			padding: 8px 20px;
+			border: none;
+			border-radius: 8px;
+			background: transparent;
+			color: rgba(255,255,255,0.4);
+			font: 500 13px sans-serif;
+			letter-spacing: 1px;
+			cursor: pointer;
+			transition: color 0.12s;
+			margin-top: 4px;
+		}
+		.btn-back:hover { color: rgba(255,255,255,0.8); }
+
+		/* ── Lap option buttons ──────────────────────────────── */
+		.lap-row {
+			display: flex;
+			gap: 10px;
+		}
+
+		.lap-opt {
+			width: 58px;
+			height: 58px;
+			border: 2px solid rgba(255,255,255,0.18);
+			border-radius: 14px;
+			background: rgba(255,255,255,0.07);
+			color: rgba(255,255,255,0.55);
+			font: 700 22px sans-serif;
+			cursor: pointer;
+			transition: all 0.12s;
+		}
+		.lap-opt:hover { background: rgba(255,255,255,0.14); color: #fff; }
+		.lap-opt.active {
+			border-color: rgba(255,255,255,0.65);
+			background: rgba(255,255,255,0.18);
+			color: #fff;
+		}
+
+		/* ── Welcome screen ──────────────────────────────────── */
+		.btn-mode-row {
+			display: flex;
+			gap: 12px;
+		}
+
+		.btn-mode-row .btn-primary {
+			padding: 14px 36px;
+			font-size: 15px;
+		}
+
+		#editor-link {
+			margin-top: 8px;
+			color: rgba(255,255,255,0.4);
+			font: 500 13px sans-serif;
 			text-decoration: none;
-			background: rgba(0,0,0,0.5);
+			transition: color 0.12s;
+		}
+		#editor-link:hover { color: rgba(255,255,255,0.8); }
+
+		/* ── Multiplayer screen ──────────────────────────────── */
+		#mp-name {
+			width: 220px;
+			padding: 10px 16px;
+			border: 1px solid rgba(255,255,255,0.2);
+			border-radius: 10px;
+			background: rgba(255,255,255,0.07);
+			color: #fff;
+			font: 500 15px sans-serif;
+			outline: none;
+			text-align: center;
+		}
+		#mp-name::placeholder { color: rgba(255,255,255,0.3); }
+		#mp-name:focus { border-color: rgba(255,255,255,0.45); }
+
+		#room-list-wrap {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			max-height: 200px;
+			overflow-y: auto;
+			width: 320px;
+		}
+
+		.room-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 10px 14px;
+			background: rgba(255,255,255,0.06);
+			border: 1px solid rgba(255,255,255,0.1);
+			border-radius: 10px;
+			gap: 10px;
+		}
+
+		.room-info { display: flex; flex-direction: column; gap: 3px; }
+		.room-id { color: #fff; font: 700 14px monospace; letter-spacing: 2px; }
+		.room-meta { color: rgba(255,255,255,0.45); font: 500 12px sans-serif; }
+
+		.btn-join {
+			padding: 7px 18px;
+			border: none;
+			border-radius: 8px;
+			background: rgba(80,210,80,0.22);
+			color: rgba(160,255,160,0.9);
+			font: 600 13px sans-serif;
+			cursor: pointer;
+			transition: background 0.12s;
+			flex-shrink: 0;
+		}
+		.btn-join:hover { background: rgba(80,210,80,0.42); color: #fff; }
+
+		.no-rooms {
+			color: rgba(255,255,255,0.3);
+			font: 500 13px sans-serif;
+			text-align: center;
+			padding: 20px 0;
+		}
+
+		#mp-status {
+			min-height: 18px;
+			color: rgba(255,140,100,0.9);
+			font: 500 13px sans-serif;
+		}
+
+		/* ── Lobby screen ────────────────────────────────────── */
+		#lobby-room-code {
+			font: 900 32px monospace;
+			letter-spacing: 8px;
+			color: #fff;
+			margin: 0;
+		}
+
+		#lobby-host-section {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.lobby-lap-opt {
+			width: 58px;
+			height: 58px;
+			border: 2px solid rgba(255,255,255,0.18);
+			border-radius: 14px;
+			background: rgba(255,255,255,0.07);
+			color: rgba(255,255,255,0.55);
+			font: 700 22px sans-serif;
+			cursor: pointer;
+			transition: all 0.12s;
+		}
+		.lobby-lap-opt:hover { background: rgba(255,255,255,0.14); color: #fff; }
+		.lobby-lap-opt.active {
+			border-color: rgba(255,255,255,0.65);
+			background: rgba(255,255,255,0.18);
+			color: #fff;
+		}
+
+		#lobby-players {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			width: 260px;
+		}
+
+		.lobby-player {
+			display: flex;
+			align-items: center;
+			gap: 10px;
 			padding: 8px 14px;
-			border-radius: 6px;
+			background: rgba(255,255,255,0.06);
+			border-radius: 8px;
+		}
+
+		.player-dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			flex-shrink: 0;
+		}
+		.dot-yellow { background: #f5c842; }
+		.dot-green  { background: #5ae05a; }
+		.dot-purple { background: #c05ae0; }
+		.dot-red    { background: #e05a5a; }
+
+		.player-name {
+			color: #fff;
+			font: 500 14px sans-serif;
+			flex: 1;
+		}
+		.player-badge {
+			color: rgba(255,255,255,0.35);
+			font: 500 11px sans-serif;
+		}
+
+		#lobby-waiting-msg {
+			color: rgba(255,255,255,0.4);
+			font: 500 13px sans-serif;
+			letter-spacing: 1px;
+		}
+
+		/* ── Countdown ───────────────────────────────────────── */
+		#countdown {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			pointer-events: none;
+			z-index: 20;
+			font: 900 130px/1 sans-serif;
+			color: #fff;
+			text-shadow: 0 4px 48px rgba(0,0,0,0.9);
+		}
+		#countdown.go { color: rgba(120,255,120,1); font-size: 90px; letter-spacing: 6px; }
+
+		@keyframes pop {
+			0%   { transform: scale(0.55); opacity: 0; }
+			40%  { transform: scale(1.1); opacity: 1; }
+			100% { transform: scale(1); opacity: 1; }
+		}
+		#countdown.pop { animation: pop 0.25s ease-out forwards; }
+
+		/* ── HUD ─────────────────────────────────────────────── */
+		#hud {
+			position: absolute;
+			top: 18px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 2px;
+			pointer-events: none;
 			z-index: 10;
 		}
-		#editor-link:hover { background: rgba(0,0,0,0.7); }
-	</style>
-	<script type="importmap">
-	{
-		"imports": {
-			"three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
-			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/",
-			"crashcat": "https://esm.sh/crashcat@0.0.2"
+		#hud-lap { color: rgba(255,255,255,0.6); font: 600 12px sans-serif; letter-spacing: 4px; }
+		#hud-time { color: #fff; font: 700 34px/1 monospace; text-shadow: 0 2px 10px rgba(0,0,0,0.7); }
+		#hud-best { min-height: 18px; color: rgba(255,218,80,0.9); font: 600 12px sans-serif; letter-spacing: 2px; }
+
+		/* ── Leaderboard table ───────────────────────────────── */
+		.leaderboard {
+			border-collapse: collapse;
+			width: 400px;
 		}
-	}
-	</script>
+		.leaderboard thead th {
+			color: rgba(255,255,255,0.38);
+			font: 600 11px sans-serif;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			padding: 0 14px 10px;
+			text-align: left;
+			border-bottom: 1px solid rgba(255,255,255,0.12);
+		}
+		.leaderboard tbody td {
+			padding: 9px 14px;
+			border-bottom: 1px solid rgba(255,255,255,0.06);
+		}
+		.lb-pos {
+			color: rgba(255,255,255,0.4);
+			font: 700 12px sans-serif;
+			letter-spacing: 1px;
+			width: 44px;
+		}
+		.lb-pos.pos-gold   { color: #f5c842; }
+		.lb-pos.pos-silver { color: #b0bec5; }
+		.lb-pos.pos-bronze { color: #cd8b3a; }
+		.lb-player {
+			color: #fff;
+			font: 500 14px sans-serif;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			min-width: 120px;
+		}
+		.lb-time {
+			color: #fff;
+			font: 600 14px monospace;
+			white-space: nowrap;
+		}
+		.lb-best {
+			color: rgba(255,218,80,0.8);
+			font: 500 13px monospace;
+			white-space: nowrap;
+		}
+		.lb-me td { background: rgba(255,255,255,0.07); }
+		.lb-racing .lb-time { color: rgba(255,255,255,0.3); font-style: italic; }
+
+		/* ── Finish lap list ─────────────────────────────────── */
+		#finish-laps {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 4px;
+			max-height: 150px;
+			overflow-y: auto;
+			margin-top: 4px;
+		}
+		.lap-result { color: rgba(255,255,255,0.55); font: 500 13px monospace; }
+		.lap-result.best { color: rgba(255,218,80,0.95); font-weight: 700; }
+	</style>
 </head>
 <body>
-	<a id="editor-link" href="editor.html">Create your own track</a>
+
+	<!-- ── Welcome ─────────────────────────────────────────────────────── -->
+	<div id="screen-welcome" class="overlay">
+		<h1>Racing</h1>
+		<div class="btn-mode-row">
+			<button id="btn-solo-mode" class="btn-primary btn-green">Solo Race</button>
+			<button id="btn-mp-mode"   class="btn-primary btn-blue">Multiplayer</button>
+		</div>
+		<a id="editor-link" href="editor.html">Create your own track</a>
+	</div>
+
+	<!-- ── Solo: lap selection ─────────────────────────────────────────── -->
+	<div id="screen-solo" class="overlay hidden">
+		<h1>Solo Race</h1>
+		<p>Laps</p>
+		<div class="lap-row">
+			<button class="lap-opt"        data-laps="1">1</button>
+			<button class="lap-opt active" data-laps="3">3</button>
+			<button class="lap-opt"        data-laps="5">5</button>
+			<button class="lap-opt"        data-laps="10">10</button>
+		</div>
+		<button id="start-btn" class="btn-primary btn-green">Start Race</button>
+		<button class="btn-back" data-back="screen-welcome">← Back</button>
+	</div>
+
+	<!-- ── Multiplayer: room list ──────────────────────────────────────── -->
+	<div id="screen-mp" class="overlay hidden">
+		<h1>Multiplayer</h1>
+		<input id="mp-name" type="text" maxlength="16" placeholder="Your name..." autocomplete="off">
+		<div id="room-list-wrap"></div>
+		<div style="display:flex;gap:10px">
+			<button id="btn-create-room" class="btn-primary btn-green">Create Room</button>
+			<button id="btn-refresh-rooms" class="btn-primary">Refresh</button>
+		</div>
+		<div id="mp-status"></div>
+		<button class="btn-back" data-back="screen-welcome">← Back</button>
+	</div>
+
+	<!-- ── Lobby ───────────────────────────────────────────────────────── -->
+	<div id="screen-lobby" class="overlay hidden">
+		<p>Room</p>
+		<div id="lobby-room-code">------</div>
+		<div id="lobby-players"></div>
+		<!-- Host controls -->
+		<div id="lobby-host-section" class="hidden">
+			<p>Laps</p>
+			<div class="lap-row">
+				<button class="lobby-lap-opt"        data-laps="1">1</button>
+				<button class="lobby-lap-opt active" data-laps="3">3</button>
+				<button class="lobby-lap-opt"        data-laps="5">5</button>
+				<button class="lobby-lap-opt"        data-laps="10">10</button>
+			</div>
+			<button id="btn-start-mp" class="btn-primary btn-green">Start Race</button>
+		</div>
+		<div id="lobby-waiting-msg" class="hidden">Waiting for host to start…</div>
+		<button class="btn-back" data-back="screen-mp">← Leave Room</button>
+	</div>
+
+	<!-- ── Countdown ───────────────────────────────────────────────────── -->
+	<div id="countdown" class="hidden"></div>
+
+	<!-- ── HUD ─────────────────────────────────────────────────────────── -->
+	<div id="hud" class="hidden">
+		<div id="hud-lap">LAP 1 / 3</div>
+		<div id="hud-time">0:00.000</div>
+		<div id="hud-best"></div>
+	</div>
+
+	<!-- ── Finish ──────────────────────────────────────────────────────── -->
+	<div id="finish" class="overlay hidden">
+		<h1>Race Complete</h1>
+		<div id="finish-leaderboard"></div>
+		<div id="finish-laps"></div>
+		<button id="play-again-btn" class="btn-primary btn-blue">Play Again</button>
+	</div>
+
 	<script>
-		const map = new URLSearchParams( location.search ).get( 'map' );
-		if ( map ) {
-			const link = document.getElementById( 'editor-link' );
-			link.href = 'editor.html?map=' + map;
-			link.textContent = 'Edit this track';
+		// Update editor link if viewing a custom map
+		const _map = new URLSearchParams( location.search ).get( 'map' );
+		if ( _map ) {
+			const _link = document.getElementById( 'editor-link' );
+			_link.href = 'editor.html?map=' + _map;
+			_link.textContent = 'Edit this track';
 		}
 	</script>
 	<script type="module" src="js/main.js"></script>
