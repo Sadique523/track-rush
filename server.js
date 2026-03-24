@@ -8,7 +8,7 @@ const __dirname = dirname( fileURLToPath( import.meta.url ) );
 
 const app = express();
 app.use( express.static( join( __dirname, 'dist' ) ) );
-app.get( '*', ( _req, res ) => res.sendFile( join( __dirname, 'dist', 'index.html' ) ) );
+app.use( ( _req, res ) => res.sendFile( join( __dirname, 'dist', 'index.html' ) ) );
 
 const httpServer = createServer( app );
 const io = new Server( httpServer, { cors: { origin: '*' } } );
