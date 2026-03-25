@@ -137,10 +137,10 @@ io.on( 'connection', socket => {
 
 	// ── Finish ─────────────────────────────────────────────────────────────
 
-	socket.on( 'race:finish', ( { totalTime } ) => {
+	socket.on( 'race:finish', ( { totalTime, bestLapTime } ) => {
 
 		const roomId = socket.data.roomId;
-		if ( roomId ) socket.to( roomId ).emit( 'player:finished', { id: socket.id, totalTime } );
+		if ( roomId ) socket.to( roomId ).emit( 'player:finished', { id: socket.id, totalTime, bestLapTime } );
 
 	} );
 

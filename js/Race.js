@@ -1,7 +1,7 @@
 import { CELL_RAW, GRID_SCALE } from './Track.js';
 
 const CELL_SIZE = CELL_RAW * GRID_SCALE;
-const MIN_TRAVEL = CELL_SIZE * 1.5; // must travel this far before a crossing counts
+const MIN_TRAVEL = CELL_SIZE * 0.5; // must travel this far before a crossing counts
 
 export class Race {
 
