@@ -8,6 +8,9 @@ const __dirname = dirname( fileURLToPath( import.meta.url ) );
 
 const app = express();
 app.use( express.static( join( __dirname, 'dist' ) ) );
+app.use( '/models', express.static( join( __dirname, 'models' ) ) );
+app.use( '/audio', express.static( join( __dirname, 'audio' ) ) );
+app.use( '/sprites', express.static( join( __dirname, 'sprites' ) ) );
 app.use( ( _req, res ) => res.sendFile( join( __dirname, 'dist', 'index.html' ) ) );
 
 const httpServer = createServer( app );
